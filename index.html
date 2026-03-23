@@ -2,735 +2,372 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Savings">
-<title>Savings</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stacksio — Save with purpose</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-
-/* ── THEMES ── */
-body.theme-dark    { --bg:#08080f; --surface:#111120; --surface2:#0d0d1a; --border:#1e1e35; --text:#e8e8f0; --text2:#a0a0c0; --muted:#5a5a7a; }
-body.theme-light   { --bg:#f2f2f7; --surface:#ffffff; --surface2:#f8f8fc; --border:#e2e2ee; --text:#1a1a2e; --text2:#5a5a7a; --muted:#9090b0; }
-body.theme-midnight{ --bg:#050a14; --surface:#0b1322; --surface2:#081018; --border:#152030; --text:#dce8f8; --text2:#7a98b8; --muted:#3a5570; }
-body.theme-slate   { --bg:#0d0e12; --surface:#15161e; --surface2:#111218; --border:#22232e; --text:#e4e4f0; --text2:#9090b0; --muted:#585870; }
-body.theme-warm    { --bg:#0f0d0a; --surface:#1a1712; --surface2:#141210; --border:#2a2620; --text:#f0ece4; --text2:#a09880; --muted:#706050; }
-
-/* ── ACCENTS ── */
-body.accent-amber  { --accent:#f59e0b; --accent-dim:#f59e0b1a; --accent-glow:0 6px 28px #f59e0b40; --on-accent:#09090f; }
-body.accent-blue   { --accent:#3b82f6; --accent-dim:#3b82f61a; --accent-glow:0 6px 28px #3b82f640; --on-accent:#ffffff; }
-body.accent-violet { --accent:#8b5cf6; --accent-dim:#8b5cf61a; --accent-glow:0 6px 28px #8b5cf640; --on-accent:#ffffff; }
-body.accent-rose   { --accent:#f43f5e; --accent-dim:#f43f5e1a; --accent-glow:0 6px 28px #f43f5e40; --on-accent:#ffffff; }
-body.accent-emerald{ --accent:#10b981; --accent-dim:#10b9811a; --accent-glow:0 6px 28px #10b98140; --on-accent:#09090f; }
-body.accent-coral  { --accent:#ff6b4a; --accent-dim:#ff6b4a1a; --accent-glow:0 6px 28px #ff6b4a40; --on-accent:#ffffff; }
-
-body {
-  background:var(--bg); color:var(--text);
-  font-family:'DM Sans',sans-serif;
-  min-height:100vh; overflow-x:hidden;
-  transition:background .3s,color .3s;
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08080f;
+  --surface:#111120;
+  --border:#1e1e35;
+  --text:#e8e8f0;
+  --muted:#5a5a7a;
+  --accent:#f59e0b;
+  --accent-glow:0 0 60px #f59e0b30;
 }
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
 
-/* ── SCREENS ── */
-.screen { display:none; min-height:100vh; }
-.screen.active { display:block; animation:fadeUp .25s ease; }
-#auth { display:none; position:fixed; inset:0; z-index:500; background:var(--bg); overflow-y:auto; }
-#auth.active { display:flex; }
-@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-@keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-@keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
-.shake { animation:shake .32s ease; }
-
-/* ── LOADING ── */
-#loading {
-  position:fixed;inset:0;background:var(--bg);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
-  z-index:999;transition:opacity .3s;
+/* ── NOISE OVERLAY ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
 }
-.dots span { display:inline-block;width:8px;height:8px;border-radius:99px;background:var(--accent,#f59e0b);margin:0 3px;animation:pulse 1.2s infinite; }
-.dots span:nth-child(2){animation-delay:.2s} .dots span:nth-child(3){animation-delay:.4s}
-
-/* ── AUTH ── */
-#auth {
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100vh;padding:40px 24px;
-}
-.auth-logo  { font-size:56px;margin-bottom:10px; }
-.auth-title { font-family:'Syne',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px; }
-.auth-sub   { font-size:14px;color:var(--muted);margin-bottom:36px; }
-.auth-box   { width:100%;max-width:380px; }
-.auth-tabs  { display:flex;background:var(--surface2);border-radius:12px;padding:4px;margin-bottom:24px;border:1px solid var(--border); }
-.auth-tab   { flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:9px;transition:all .2s; }
-.auth-tab.on{ background:var(--surface);color:var(--text);box-shadow:0 2px 10px rgba(0,0,0,.15); }
-.auth-input { width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:16px;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px;-webkit-appearance:none;transition:border-color .2s; }
-.auth-input:focus { border-color:var(--accent); }
-.auth-btn   { width:100%;background:var(--accent);color:var(--on-accent);border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:var(--accent-glow);margin-top:4px;transition:transform .1s,opacity .2s; }
-.auth-btn:active { transform:scale(.97); }
-.auth-err   { text-align:center;font-size:13px;min-height:20px;margin-top:10px; }
-
-/* ── HEADER ── */
-.top-header { padding:calc(22px + env(safe-area-inset-top)) 22px 20px;border-bottom:1px solid var(--border); }
-.th-row     { display:flex;justify-content:space-between;align-items:flex-start; }
-.th-label   { font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px; }
-.th-total   { font-family:'Syne',sans-serif;font-size:46px;font-weight:800;letter-spacing:-.035em;line-height:1; }
-.th-sub     { font-size:13px;color:var(--muted);margin-top:6px; }
-
-/* ── TIER BADGE ── */
-.tbadge     { display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;border:1.5px solid var(--border);cursor:pointer; }
-.tbadge.free{ color:var(--muted); }
-.tbadge.plus{ color:var(--accent);border-color:var(--accent);background:var(--accent-dim); }
-.tbadge.pro { color:#fbbf24;border-color:#fbbf2445;background:#fbbf2412; }
-
-/* ── LIMIT BANNER ── */
-.limit-bar  { margin:16px 18px 0;background:var(--accent-dim);border:1.5px solid var(--accent);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px; }
-.lb-txt     { font-size:13px;font-weight:700;color:var(--accent); }
-.lb-sub     { font-size:12px;color:var(--muted);margin-top:2px; }
-.lb-btn     { background:var(--accent);color:var(--on-accent);border:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap; }
-
-/* ── GOAL CARDS ── */
-.section       { padding:22px 18px 0; }
-.section-label { font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px; }
-.empty         { text-align:center;padding:56px 0;color:var(--muted); }
-.empty-ico     { font-size:48px;margin-bottom:14px; }
-
-.card { background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:18px;margin-bottom:12px;cursor:pointer;transition:border-color .15s,transform .1s; }
-.card:active { transform:scale(.985);border-color:var(--accent); }
-.c-row  { display:flex;align-items:center;justify-content:space-between; }
-.c-left { display:flex;align-items:center;gap:14px; }
-.rw     { position:relative;width:58px;height:58px;flex-shrink:0; }
-.rw svg { position:absolute;inset:0; }
-.rw-ico { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px; }
-.c-name { font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:3px; }
-.c-amt  { font-size:13px;color:var(--muted); }
-.c-amt span { color:var(--border); }
-.done-tag { background:#4ade8018;color:#4ade80;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;margin-top:4px;display:inline-block; }
-.bar-t { margin-top:14px;background:var(--surface2);border-radius:99px;height:4px;overflow:hidden; }
-.bar-f { height:100%;border-radius:99px;transition:width .5s ease; }
-
-/* ── FAB ── */
-.fab { position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));right:20px;background:var(--accent);color:var(--on-accent);border:none;border-radius:16px;padding:14px 22px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:var(--accent-glow);transition:transform .1s,opacity .2s; }
-.fab:active { transform:scale(.95); }
 
 /* ── NAV ── */
-.bnav { position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:50; }
-.nb   { flex:1;padding:12px 0 10px;background:none;border:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;letter-spacing:.04em;text-transform:uppercase;transition:color .15s; }
-.nb.on{ color:var(--accent); }
-.ni   { font-size:20px; }
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 48px;
+  background:linear-gradient(to bottom,#08080fff 0%,#08080f00 100%);
+}
+.nav-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--text)}
+.nav-logo span{color:var(--accent)}
+.nav-cta{
+  background:var(--accent);color:#09090f;
+  border:none;border-radius:10px;padding:10px 22px;
+  font-size:14px;font-weight:700;cursor:pointer;
+  font-family:'Syne',sans-serif;letter-spacing:.01em;
+  text-decoration:none;display:inline-block;
+  transition:transform .15s,box-shadow .15s;
+}
+.nav-cta:hover{transform:translateY(-1px);box-shadow:0 8px 30px #f59e0b40}
 
-/* ── BACK BTN ── */
-.back { background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:calc(18px + env(safe-area-inset-top)) 22px 0;display:flex;align-items:center;gap:6px; }
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:120px 24px 80px;
+  position:relative;z-index:1;
+}
 
-/* ── FORMS ── */
-.fbody { padding:20px 18px; }
-.ftitle{ font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:28px; }
-.field { margin-bottom:22px; }
-.flabel{ font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px; }
-.finput{ width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-size:16px;outline:none;font-family:'DM Sans',sans-serif;-webkit-appearance:none;transition:border-color .2s; }
-.finput:focus { border-color:var(--accent); }
-.sbtn { background:var(--accent);color:var(--on-accent);border:none;border-radius:14px;padding:15px 0;width:100%;font-size:16px;font-weight:800;cursor:pointer;font-family:'Syne',sans-serif;box-shadow:var(--accent-glow);transition:transform .1s;margin-top:4px; }
-.sbtn:active { transform:scale(.98); }
+/* radial glow behind hero */
+.hero::before{
+  content:'';position:absolute;
+  width:700px;height:700px;
+  background:radial-gradient(ellipse,#f59e0b18 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-60%);
+  pointer-events:none;
+}
 
-/* ── EMOJI ── */
-.egrid { display:flex;flex-wrap:wrap;gap:8px; }
-.ebtn  { background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;width:46px;height:46px;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s; }
-.ebtn.on { background:var(--accent-dim);border-color:var(--accent); }
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#f59e0b12;border:1px solid #f59e0b30;
+  border-radius:99px;padding:6px 16px;
+  font-size:12px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);
+  margin-bottom:28px;
+  animation:fadeUp .6s ease both;
+}
+.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:99px;background:var(--accent);display:inline-block}
 
-/* ── DETAIL ── */
-.dhero  { padding:24px 18px 0;display:flex;align-items:center;gap:16px;margin-bottom:24px; }
-.d-ico  { font-size:56px; }
-.d-name { font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:3px; }
-.d-note { font-size:13px;color:var(--muted); }
-.scard  { background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:22px;margin:0 18px 12px;display:flex;align-items:center;justify-content:space-between; }
-.sv     { font-family:'Syne',sans-serif;font-size:36px;font-weight:800; }
-.sof    { font-size:13px;color:var(--muted);margin-top:5px; }
-.brw    { position:relative;width:80px;height:80px;flex-shrink:0; }
-.brw svg{ position:absolute;inset:0; }
-.brw-p  { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800; }
-.abtn   { background:var(--accent);color:var(--on-accent);border:none;border-radius:14px;padding:15px 0;width:calc(100% - 36px);margin:0 18px 10px;display:block;font-size:16px;font-weight:800;cursor:pointer;font-family:'Syne',sans-serif;text-align:center;box-shadow:var(--accent-glow);transition:transform .1s; }
-.abtn:active { transform:scale(.98); }
-.gbtn   { background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:14px;padding:13px 0;width:calc(100% - 36px);margin:0 18px;display:block;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center; }
-.hist   { padding:24px 18px 0; }
-.hl     { font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px; }
-.hr     { display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border); }
-.hn     { font-size:14px;font-weight:500;margin-bottom:2px; }
-.hd     { font-size:12px;color:var(--muted); }
-.ha     { color:#4ade80;font-weight:700;font-size:15px; }
+.hero-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(48px,8vw,96px);
+  font-weight:800;
+  letter-spacing:-.04em;
+  line-height:.95;
+  margin-bottom:28px;
+  animation:fadeUp .6s .1s ease both;
+}
+.hero-title em{
+  font-style:normal;
+  color:transparent;
+  -webkit-text-stroke:1px #f59e0b60;
+  position:relative;
+}
+.hero-title em::after{
+  content:attr(data-text);
+  position:absolute;left:0;top:0;
+  color:var(--accent);
+  clip-path:inset(0 100% 0 0);
+  animation:reveal 1.2s .8s ease forwards;
+  -webkit-text-stroke:0;
+}
+@keyframes reveal{to{clip-path:inset(0 0% 0 0)}}
 
-/* ── SETTINGS ── */
-.sbody  { padding:calc(22px + env(safe-area-inset-top)) 18px 0; }
-.stitle { font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:28px; }
-.ssec   { margin-bottom:32px; }
-.sslabel{ font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px; }
-.theme-grid  { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
-.theme-btn   { background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;text-align:left;transition:border-color .15s; }
-.theme-btn.on{ border-color:var(--accent); }
-.tp { height:38px;border-radius:9px;margin-bottom:10px; }
-.tn { font-size:13px;font-weight:700;color:var(--text); }
-.ag { display:flex;gap:10px;flex-wrap:wrap; }
-.ad { width:40px;height:40px;border-radius:99px;cursor:pointer;border:3px solid transparent;transition:transform .15s,border-color .15s;display:flex;align-items:center;justify-content:center;font-size:14px; }
-.ad.on { border-color:var(--text);transform:scale(1.1); }
+.hero-sub{
+  font-size:clamp(16px,2vw,20px);
+  color:var(--muted);
+  max-width:480px;
+  line-height:1.6;
+  margin-bottom:44px;
+  animation:fadeUp .6s .2s ease both;
+}
 
-/* Tier cards */
-.tcards { display:flex;flex-direction:column;gap:12px; }
-.tcard  { background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:20px; }
-.tcard.cur { border-color:var(--accent);background:var(--accent-dim); }
-.tcrow  { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px; }
-.tcname { font-family:'Syne',sans-serif;font-size:20px;font-weight:800; }
-.tcprice{ font-size:14px;font-weight:700;color:var(--muted); }
-.tcfeat { list-style:none; }
-.tcfeat li { font-size:13px;color:var(--text2);padding:4px 0;display:flex;align-items:center;gap:8px; }
-.tcfeat li::before { content:"✓";color:#4ade80;font-weight:800;font-size:12px; }
-.upgbtn { background:var(--accent);color:var(--on-accent);border:none;border-radius:12px;padding:13px 0;width:100%;font-size:14px;font-weight:800;cursor:pointer;font-family:'Syne',sans-serif;margin-top:14px;box-shadow:var(--accent-glow); }
-.curtag { background:var(--accent);color:var(--on-accent);border-radius:99px;padding:4px 11px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em; }
-.srow   { display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--border);cursor:pointer; }
-.srow-l { font-size:15px;font-weight:500; }
-.danger { color:#f43f5e; }
+.hero-btns{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
+  animation:fadeUp .6s .3s ease both;
+}
+.btn-primary{
+  background:var(--accent);color:#09090f;
+  border:none;border-radius:14px;padding:16px 36px;
+  font-size:16px;font-weight:800;cursor:pointer;
+  font-family:'Syne',sans-serif;
+  box-shadow:0 8px 40px #f59e0b35;
+  text-decoration:none;display:inline-block;
+  transition:transform .15s,box-shadow .15s;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 50px #f59e0b45}
+.btn-ghost{
+  background:transparent;color:var(--muted);
+  border:1.5px solid var(--border);border-radius:14px;padding:15px 28px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  text-decoration:none;display:inline-block;
+  transition:border-color .15s,color .15s;
+}
+.btn-ghost:hover{border-color:var(--accent);color:var(--text)}
 
-/* ── MODAL ── */
-.modal-bg { position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:200;backdrop-filter:blur(4px); }
-.modal    { background:var(--surface);border-radius:24px 24px 0 0;padding:28px 22px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:500px;animation:slideUp .25s ease; }
-@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-.modal-title { font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:20px; }
-.modal-txt   { font-size:15px;color:var(--text2);line-height:1.6;margin-bottom:24px; }
-.modal-row   { display:flex;gap:10px; }
-.modal-btn   { flex:1;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif; }
-.modal-btn.cancel { background:var(--surface2);border:1.5px solid var(--border);color:var(--muted); }
-.modal-btn.confirm{ background:var(--accent);color:var(--on-accent);box-shadow:var(--accent-glow); }
+/* ── FLOATING CARDS PREVIEW ── */
+.preview{
+  margin-top:72px;position:relative;
+  width:100%;max-width:600px;
+  animation:fadeUp .6s .4s ease both;
+}
+.preview-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:22px;padding:22px 24px;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);
+}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
+.pc-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.pc-total{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;letter-spacing:-.03em}
+.pc-badge{background:#f59e0b18;color:var(--accent);border:1px solid #f59e0b30;border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.pc-goals{display:flex;flex-direction:column;gap:10px}
+.pg{background:#0d0d1a;border-radius:14px;padding:14px 16px}
+.pg-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pg-left{display:flex;align-items:center;gap:10px}
+.pg-ico{font-size:20px}
+.pg-name{font-weight:600;font-size:14px}
+.pg-amt{font-size:12px;color:var(--muted);margin-top:2px}
+.pg-pct{font-size:12px;font-weight:700;color:var(--accent)}
+.pg-bar{height:3px;background:#1e1e35;border-radius:99px;overflow:hidden}
+.pg-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+
+/* floating mini cards */
+.fc{
+  position:absolute;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:16px;
+  padding:14px 18px;box-shadow:0 20px 50px rgba(0,0,0,.5);
+  animation:float 4s ease-in-out infinite;
+}
+.fc1{top:-30px;right:-40px;animation-delay:0s}
+.fc2{bottom:-20px;left:-50px;animation-delay:2s}
+@keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)}}
+.fc-ico{font-size:22px;margin-bottom:6px}
+.fc-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent)}
+.fc-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── HOW IT WORKS ── */
+.hiw{
+  padding:120px 24px;
+  max-width:1000px;margin:0 auto;
+  position:relative;z-index:1;
+}
+.section-eyebrow{
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);font-weight:700;margin-bottom:16px;text-align:center;
+}
+.section-title{
+  font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,52px);
+  font-weight:800;letter-spacing:-.03em;text-align:center;
+  margin-bottom:72px;line-height:1.1;
+}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px}
+.step{
+  padding:40px 32px;position:relative;
+  border:1px solid transparent;
+  transition:border-color .2s,background .2s;
+  border-radius:20px;
+}
+.step:hover{background:var(--surface);border-color:var(--border)}
+.step-num{
+  font-family:'Syne',sans-serif;font-size:72px;font-weight:800;
+  color:#f59e0b08;letter-spacing:-.04em;line-height:1;
+  margin-bottom:-20px;
+  transition:color .2s;
+}
+.step:hover .step-num{color:#f59e0b15}
+.step-ico{font-size:32px;margin-bottom:16px;display:block}
+.step-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:10px}
+.step-desc{font-size:15px;color:var(--muted);line-height:1.65}
+
+/* ── CTA SECTION ── */
+.cta-section{
+  padding:80px 24px 120px;
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;position:relative;z-index:1;
+}
+.cta-section::before{
+  content:'';position:absolute;
+  width:500px;height:300px;
+  background:radial-gradient(ellipse,#f59e0b14 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-title{
+  font-family:'Syne',sans-serif;font-size:clamp(28px,5vw,52px);
+  font-weight:800;letter-spacing:-.03em;margin-bottom:16px;
+}
+.cta-sub{font-size:16px;color:var(--muted);margin-bottom:36px;max-width:380px;line-height:1.6}
+.cta-note{font-size:13px;color:var(--muted);margin-top:16px}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);
+  padding:28px 48px;
+  display:flex;justify-content:space-between;align-items:center;
+  position:relative;z-index:1;
+}
+.foot-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--muted)}
+.foot-logo span{color:var(--accent)}
+.foot-copy{font-size:13px;color:var(--muted)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  nav{padding:18px 22px}
+  .fc1,.fc2{display:none}
+  footer{flex-direction:column;gap:8px;text-align:center;padding:24px}
+}
 </style>
 </head>
-<body class="theme-dark accent-amber">
+<body>
 
-<!-- LOADING -->
-<div id="loading">
-  <div style="font-size:52px;margin-bottom:10px">💰</div>
-  <div class="dots"><span></span><span></span><span></span></div>
-</div>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">stacks<span>.</span>io</div>
+  <a href="/app.html" class="nav-cta">Get started free</a>
+</nav>
 
-<!-- AUTH -->
-<div id="auth" class="screen">
-  <div class="auth-logo">💰</div>
-  <div class="auth-title">Savings</div>
-  <div class="auth-sub">Track every dollar toward what matters</div>
-  <div class="auth-box">
-    <div class="auth-tabs">
-      <button class="auth-tab on" id="tab-login" onclick="authTab('login')">Log in</button>
-      <button class="auth-tab" id="tab-signup" onclick="authTab('signup')">Sign up</button>
-    </div>
-    <input id="a-email" class="auth-input" type="email" placeholder="Email" autocomplete="email">
-    <input id="a-pass"  class="auth-input" type="password" placeholder="Password" autocomplete="current-password">
-    <input id="a-conf"  class="auth-input" type="password" placeholder="Confirm password" style="display:none">
-    <button id="a-btn" class="auth-btn" onclick="doAuth()">Log in</button>
-    <div id="a-err" class="auth-err"></div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Save smarter, not harder</div>
+  <h1 class="hero-title">
+    Your money.<br>
+    <em data-text="Your goals.">Your goals.</em>
+  </h1>
+  <p class="hero-sub">Track every dollar toward what actually matters — the watch, the car, the fit. Stacksio keeps you locked in.</p>
+  <div class="hero-btns">
+    <a href="/app.thml" class="btn-primary">Start for free</a>
+    <a href="#how" class="btn-ghost">See how it works</a>
   </div>
-</div>
 
-<!-- HOME -->
-<div id="home" class="screen" style="padding-bottom:110px">
-  <div class="top-header">
-    <div class="th-row">
-      <div>
-        <div class="th-label">Total saved</div>
-        <div class="th-total" id="h-total">$0</div>
-        <div class="th-sub" id="h-sub">—</div>
+  <div class="preview">
+    <!-- Floating mini cards -->
+    <div class="fc fc1">
+      <div class="fc-ico">⌚</div>
+      <div class="fc-val">68%</div>
+      <div class="fc-lbl">First Watch</div>
+    </div>
+    <div class="fc fc2">
+      <div class="fc-ico">🎯</div>
+      <div class="fc-val">$340</div>
+      <div class="fc-lbl">saved this month</div>
+    </div>
+
+    <!-- Main card -->
+    <div class="preview-card">
+      <div class="pc-top">
+        <div>
+          <div class="pc-label">Total saved</div>
+          <div class="pc-total">$1,240</div>
+        </div>
+        <div class="pc-badge">Pro ⚡</div>
       </div>
-      <div id="h-badge"></div>
+      <div class="pc-goals">
+        <div class="pg">
+          <div class="pg-row">
+            <div class="pg-left"><span class="pg-ico">⌚</span><div><div class="pg-name">First Watch</div><div class="pg-amt">$340 / $500</div></div></div>
+            <div class="pg-pct">68%</div>
+          </div>
+          <div class="pg-bar"><div class="pg-fill" style="width:68%"></div></div>
+        </div>
+        <div class="pg">
+          <div class="pg-row">
+            <div class="pg-left"><span class="pg-ico">🚗</span><div><div class="pg-name">First Car</div><div class="pg-amt">$900 / $5,000</div></div></div>
+            <div class="pg-pct">18%</div>
+          </div>
+          <div class="pg-bar"><div class="pg-fill" style="width:18%"></div></div>
+        </div>
+        <div class="pg">
+          <div class="pg-row">
+            <div class="pg-left"><span class="pg-ico">👟</span><div><div class="pg-name">Mortar Fit</div><div class="pg-amt">$0 / $380</div></div></div>
+            <div class="pg-pct">0%</div>
+          </div>
+          <div class="pg-bar"><div class="pg-fill" style="width:0%"></div></div>
+        </div>
+      </div>
     </div>
   </div>
-  <div id="h-limitbar"></div>
-  <div class="section">
-    <div class="section-label">Goals</div>
-    <div id="h-goals"></div>
-  </div>
-  <button class="fab" id="home-fab" onclick="goAdd()">+ New goal</button>
-  <div class="bnav">
-    <button class="nb on" id="nb-home" onclick="navTo('home')"><span class="ni">🏠</span>Home</button>
-    <button class="nb" id="nb-settings" onclick="navTo('settings')"><span class="ni">⚙️</span>Settings</button>
-  </div>
-</div>
+</section>
 
-<!-- ADD GOAL -->
-<div id="add" class="screen" style="padding-bottom:40px">
-  <button class="back" onclick="goScreen('home')">← Back</button>
-  <div class="fbody">
-    <div class="ftitle">New goal</div>
-    <div class="field"><div class="flabel">Icon</div><div class="egrid" id="egrid"></div></div>
-    <div class="field"><div class="flabel">Goal name</div><input id="n-name" class="finput" type="text" placeholder="e.g. First watch"></div>
-    <div class="field"><div class="flabel">Target (CAD $)</div><input id="n-target" class="finput" type="number" inputmode="decimal" placeholder="500"></div>
-    <div class="field"><div class="flabel">Note (optional)</div><input id="n-note" class="finput" type="text" placeholder="e.g. Seiko 5 — $280"></div>
-    <button class="sbtn" onclick="createGoal()">Create goal</button>
-  </div>
-</div>
+<!-- HOW IT WORKS -->
+<section class="hiw" id="how">
+  <div class="section-eyebrow reveal">How it works</div>
+  <h2 class="section-title reveal">Three steps.<br>That's it.</h2>
 
-<!-- DEPOSIT -->
-<div id="deposit" class="screen" style="padding-bottom:40px">
-  <button class="back" onclick="goScreen('detail')">← Back</button>
-  <div class="fbody">
-    <div class="ftitle" id="dep-title">Add deposit</div>
-    <div class="field"><div class="flabel">Amount (CAD $)</div><input id="d-amt" class="finput" type="number" inputmode="decimal" placeholder="0"></div>
-    <div class="field"><div class="flabel">Note (optional)</div><input id="d-note" class="finput" type="text" placeholder="e.g. Birthday money"></div>
-    <button class="sbtn" onclick="saveDeposit()">Save deposit</button>
-  </div>
-</div>
-
-<!-- DETAIL -->
-<div id="detail" class="screen" style="padding-bottom:40px">
-  <button class="back" onclick="goScreen('home')">← Back</button>
-  <div id="det-body"></div>
-</div>
-
-<!-- SETTINGS -->
-<div id="settings" class="screen" style="padding-bottom:110px">
-  <div class="sbody">
-    <div class="stitle">Settings</div>
-    <div class="ssec">
-      <div class="sslabel">Theme</div>
-      <div class="theme-grid" id="theme-grid"></div>
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <span class="step-ico">🎯</span>
+      <div class="step-title">Set a goal</div>
+      <p class="step-desc">Name it, pick an icon, set a target amount. Whether it's $200 or $20,000 — it starts with a goal.</p>
     </div>
-    <div class="ssec">
-      <div class="sslabel">Accent Color</div>
-      <div class="ag" id="accent-grid"></div>
+    <div class="step reveal">
+      <div class="step-num">02</div>
+      <span class="step-ico">💸</span>
+      <div class="step-title">Log your deposits</div>
+      <p class="step-desc">Every time you put money aside, log it in seconds. Add a note like "birthday money" or "lawn job" to track where it came from.</p>
     </div>
-    <div class="ssec">
-      <div class="sslabel">Plan</div>
-      <div class="tcards" id="tier-cards"></div>
-    </div>
-    <div class="ssec">
-      <div class="srow" onclick="confirmLogout()"><span class="srow-l danger">Log out</span></div>
+    <div class="step reveal">
+      <div class="step-num">03</div>
+      <span class="step-ico">🏁</span>
+      <div class="step-title">Watch it stack</div>
+      <p class="step-desc">Your progress ring fills up as you go. Hit 100% and you're done — time to buy what you've been working toward.</p>
     </div>
   </div>
-  <div class="bnav">
-    <button class="nb" id="nb-home2" onclick="navTo('home')"><span class="ni">🏠</span>Home</button>
-    <button class="nb on" id="nb-set2" onclick="navTo('settings')"><span class="ni">⚙️</span>Settings</button>
-  </div>
-</div>
+</section>
 
-<!-- MODAL -->
-<div id="modal" class="modal-bg" style="display:none" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-title" id="m-title"></div>
-    <div class="modal-txt" id="m-body"></div>
-    <div class="modal-row" id="m-btns"></div>
-  </div>
-</div>
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title reveal">Ready to start stacking?</h2>
+  <p class="cta-sub reveal">Free to use. No credit card. Takes 30 seconds to set up your first goal.</p>
+  <a href="https://stacksio.vercel.app" class="btn-primary reveal">Create free account</a>
+  <div class="cta-note reveal">Free plan includes up to 3 goals</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">stacks<span>.</span>io</div>
+  <div class="foot-copy">© 2026 Stacksio. All rights reserved.</div>
+</footer>
 
 <script>
-// ══════════════════════════════════════════
-//  CONFIG — replace with your Supabase keys
-// ══════════════════════════════════════════
-const SUPABASE_URL  = 'https://ftvvkizdhkbcstgkzuou.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0dnZraXpkaGtiY3N0Z2t6dW91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODM0ODIsImV4cCI6MjA4OTI1OTQ4Mn0.ijmwxPmUzXL5572YfCoKSR2YDiV5VVHpX20XBX31_9E';
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ══════════════════════════════════════════
-//  CONSTANTS
-// ══════════════════════════════════════════
-const EMOJIS = ["⌚","🚗","💻","✈️","👟","🎮","📷","🎸","🏠","💎","🎒","🏋️","🎯","🏄","🛹","🎓","🏍️","📱","🎧","🧳"];
-const TIERS = {
-  free:  { name:'Free',  limit:3,        price:'Free',         features:['Up to 3 savings goals','2 themes','2 accent colors'] },
-  plus:  { name:'Plus',  limit:7,        price:'$4.99 CAD/mo', features:['Up to 7 goals','All 5 themes','All 6 accent colors','Full deposit history'] },
-  pro:   { name:'Pro',   limit:Infinity, price:'$9.99 CAD/mo', features:['Unlimited goals','All themes & colors','Priority support','Early access to new features'] },
-};
-const THEMES = [
-  { id:'dark',    name:'Dark',     bg:'#08080f', s1:'#111120', s2:'#1e1e35' },
-  { id:'light',   name:'Light',    bg:'#f2f2f7', s1:'#ffffff', s2:'#e2e2ee' },
-  { id:'midnight',name:'Midnight', bg:'#050a14', s1:'#0b1322', s2:'#152030' },
-  { id:'slate',   name:'Slate',    bg:'#0d0e12', s1:'#15161e', s2:'#22232e' },
-  { id:'warm',    name:'Warm',     bg:'#0f0d0a', s1:'#1a1712', s2:'#2a2620' },
-];
-const ACCENTS = [
-  { id:'amber',   color:'#f59e0b', label:'Amber'   },
-  { id:'blue',    color:'#3b82f6', label:'Blue'    },
-  { id:'violet',  color:'#8b5cf6', label:'Violet'  },
-  { id:'rose',    color:'#f43f5e', label:'Rose'    },
-  { id:'emerald', color:'#10b981', label:'Emerald' },
-  { id:'coral',   color:'#ff6b4a', label:'Coral'   },
-];
-// Tier-locked features
-const FREE_THEMES  = ['dark','light'];
-const FREE_ACCENTS = ['amber','blue'];
-
-// ══════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════
-let user = null;
-let profile = { tier:'free', theme:'dark', accent:'amber' };
-let goals = [];
-let activeId = null;
-let selEmoji = EMOJIS[0];
-let authMode = 'login';
-
-// ══════════════════════════════════════════
-//  HELPERS
-// ══════════════════════════════════════════
-const cad = n => new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD',maximumFractionDigits:0}).format(n||0);
-
-function ring(pct, sz, sw, color) {
-  const r=(sz-sw*2)/2, c=2*Math.PI*r, off=c-(Math.min(pct,100)/100)*c;
-  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="transform:rotate(-90deg)">
-    <circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="${sw}"/>
-    <circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${sw}"
-      stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" stroke-linecap="round"/>
-  </svg>`;
-}
-
-function gcol(pct) { return pct>=100?'#4ade80':'var(--accent)'; }
-function limit()   { return TIERS[profile.tier||'free'].limit; }
-
-function doShake(el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
-
-function applyTheme(t,a) { document.body.className = `theme-${t} accent-${a}`; }
-
-// ══════════════════════════════════════════
-//  SCREENS
-// ══════════════════════════════════════════
-function goScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>{
-    s.classList.remove('active');
-    s.style.display = 'none';
-  });
-  const el = document.getElementById(name);
-  if(el) { el.style.display = name==='auth' ? 'flex' : 'block'; el.classList.add('active'); }
-  window.scrollTo(0,0);  if(name==='home')     renderHome();
-  if(name==='detail')   renderDetail();
-  if(name==='settings') renderSettings();
-}
-
-function navTo(tab) {
-  goScreen(tab);
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll(`[id^="nb-${tab}"]`).forEach(b=>b.classList.add('on'));
-}
-
-// ══════════════════════════════════════════
-//  MODAL
-// ══════════════════════════════════════════
-let modalResolve = null;
-function showModal(title, body, btns) {
-  document.getElementById('m-title').textContent = title;
-  document.getElementById('m-body').innerHTML = body;
-  document.getElementById('m-btns').innerHTML = btns.map((b,i)=>
-    `<button class="modal-btn ${b.cls}" onclick="resolveModal(${i})">${b.label}</button>`
-  ).join('');
-  document.getElementById('modal').style.display = 'flex';
-  return new Promise(r=>modalResolve=r);
-}
-function resolveModal(i) { document.getElementById('modal').style.display='none'; modalResolve?.(i); }
-function closeModal(e)   { if(e.target===document.getElementById('modal')) resolveModal(-1); }
-
-// ══════════════════════════════════════════
-//  AUTH
-// ══════════════════════════════════════════
-function authTab(mode) {
-  authMode = mode;
-  document.getElementById('tab-login').classList.toggle('on', mode==='login');
-  document.getElementById('tab-signup').classList.toggle('on', mode==='signup');
-  document.getElementById('a-btn').textContent = mode==='login' ? 'Log in' : 'Create account';
-  document.getElementById('a-conf').style.display = mode==='signup' ? 'block' : 'none';
-  document.getElementById('a-err').textContent = '';
-}
-
-async function doAuth() {
-  const email = document.getElementById('a-email').value.trim();
-  const pass  = document.getElementById('a-pass').value;
-  const err   = document.getElementById('a-err');
-  err.textContent = ''; err.style.color = '#f43f5e';
-  if (!email||!pass) { err.textContent='Fill in all fields.'; return; }
-  const btn = document.getElementById('a-btn');
-  btn.textContent='...'; btn.disabled=true;
-  try {
-    if (authMode==='signup') {
-      const conf = document.getElementById('a-conf').value;
-      if (pass!==conf) { err.textContent='Passwords do not match.'; btn.textContent='Create account'; btn.disabled=false; return; }
-      const { error } = await sb.auth.signUp({ email, password:pass });
-      if (error) throw error;
-      err.style.color='#4ade80';
-      err.textContent='Account created! Check your email to confirm.';
-    } else {
-      const { error } = await sb.auth.signInWithPassword({ email, password:pass });
-      if (error) throw error;
-    }
-  } catch(e) { err.textContent = e.message || 'Something went wrong.'; }
-  btn.textContent = authMode==='login'?'Log in':'Create account'; btn.disabled=false;
-}
-
-async function confirmLogout() {
-  const r = await showModal('Log out','Are you sure you want to log out?',[
-    { label:'Cancel', cls:'cancel' }, { label:'Log out', cls:'confirm' }
-  ]);
-  if (r===1) {
-    await sb.auth.signOut();
-    user=null; goals=[]; profile={tier:'free',theme:'dark',accent:'amber'};
-    applyTheme('dark','amber');
-    goScreen('auth');
-  }
-}
-
-// ══════════════════════════════════════════
-//  DATA
-// ══════════════════════════════════════════
-async function loadProfile() {
-  const { data } = await sb.from('profiles').select('*').eq('id',user.id).single();
-  if (data) { profile=data; applyTheme(data.theme||'dark', data.accent||'amber'); }
-  else {
-    await sb.from('profiles').insert({ id:user.id, tier:'free', theme:'dark', accent:'amber' });
-  }
-}
-async function loadGoals() {
-  const { data } = await sb.from('goals').select('*').eq('user_id',user.id).order('created_at');
-  goals = data||[];
-}
-async function savePref(key,val) {
-  profile[key]=val;
-  await sb.from('profiles').update({[key]:val}).eq('id',user.id);
-}
-
-// ══════════════════════════════════════════
-//  RENDER HOME
-// ══════════════════════════════════════════
-function renderHome() {
-  const total  = goals.reduce((a,g)=>a+(g.saved||0),0);
-  const target = goals.reduce((a,g)=>a+(g.target||0),0);
-  document.getElementById('h-total').textContent = cad(total);
-  document.getElementById('h-sub').textContent = goals.length===0
-    ? 'No goals yet' : `${goals.length} goal${goals.length!==1?'s':''} · target ${cad(target)}`;
-
-  const t = profile.tier||'free';
-  const bl = {free:'Free',plus:'Plus ✦',pro:'Pro ⚡'};
-  document.getElementById('h-badge').innerHTML = `<div class="tbadge ${t}" onclick="navTo('settings')">${bl[t]}</div>`;
-
-  const lim = limit();
-  const lb = document.getElementById('h-limitbar');
-  const fab = document.getElementById('home-fab');
-  if (goals.length>=lim && t!=='pro') {
-    lb.innerHTML = `<div class="limit-bar">
-      <div><div class="lb-txt">Goal limit reached (${goals.length}/${lim})</div><div class="lb-sub">Upgrade to add more</div></div>
-      <button class="lb-btn" onclick="navTo('settings')">Upgrade</button>
-    </div>`;
-    fab.style.opacity='0.35'; fab.style.pointerEvents='none';
-  } else {
-    lb.innerHTML=''; fab.style.opacity='1'; fab.style.pointerEvents='auto';
-  }
-
-  const list = document.getElementById('h-goals');
-  if (goals.length===0) {
-    list.innerHTML=`<div class="empty"><div class="empty-ico">💰</div><div style="font-size:14px">Tap + to add your first goal</div></div>`;
-    return;
-  }
-  list.innerHTML = goals.map(g=>{
-    const pct=g.target>0?Math.round((g.saved/g.target)*100):0;
-    const col=gcol(pct);
-    return `<div class="card" onclick="openGoal('${g.id}')">
-      <div class="c-row">
-        <div class="c-left">
-          <div class="rw">${ring(pct,58,5,col)}<div class="rw-ico">${g.emoji||'💰'}</div></div>
-          <div>
-            <div class="c-name">${g.name}</div>
-            <div class="c-amt">${cad(g.saved)} <span>/ ${cad(g.target)}</span></div>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:12px;font-weight:700;color:${col}">${pct}%</div>
-          ${pct>=100?'<div class="done-tag">Done ✓</div>':''}
-        </div>
-      </div>
-      <div class="bar-t"><div class="bar-f" style="width:${Math.min(pct,100)}%;background:${pct>=100?'#4ade80':'var(--accent)'}"></div></div>
-    </div>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════
-//  ADD GOAL
-// ══════════════════════════════════════════
-function goAdd() {
-  if (goals.length>=limit() && profile.tier!=='pro') { navTo('settings'); return; }
-  selEmoji=EMOJIS[0];
-  renderEmojiGrid();
-  ['n-name','n-target','n-note'].forEach(id=>document.getElementById(id).value='');
-  goScreen('add');
-}
-function renderEmojiGrid() {
-  document.getElementById('egrid').innerHTML = EMOJIS.map(e=>
-    `<button class="ebtn${e===selEmoji?' on':''}" onclick="pickEmoji('${e}')">${e}</button>`
-  ).join('');
-}
-function pickEmoji(e) { selEmoji=e; renderEmojiGrid(); }
-async function createGoal() {
-  const name   = document.getElementById('n-name').value.trim();
-  const target = Number(document.getElementById('n-target').value);
-  const note   = document.getElementById('n-note').value.trim();
-  if (!name)         { doShake(document.getElementById('n-name'));   return; }
-  if (!target||target<=0) { doShake(document.getElementById('n-target')); return; }
-  const btn = document.querySelector('#add .sbtn');
-  btn.textContent='...'; btn.disabled=true;
-  const { data,error } = await sb.from('goals').insert({
-    user_id:user.id, name, target, emoji:selEmoji, note, saved:0, history:[]
-  }).select().single();
-  btn.textContent='Create goal'; btn.disabled=false;
-  if (!error&&data) { goals.push(data); goScreen('home'); }
-}
-
-// ══════════════════════════════════════════
-//  DETAIL
-// ══════════════════════════════════════════
-function openGoal(id) { activeId=id; goScreen('detail'); }
-function renderDetail() {
-  const g = goals.find(x=>x.id===activeId);
-  if (!g) { goScreen('home'); return; }
-  const pct=g.target>0?Math.round((g.saved/g.target)*100):0;
-  const col=gcol(pct);
-  const rem=Math.max(0,g.target-(g.saved||0));
-  const hist=Array.isArray(g.history)?g.history:[];
-  let h = `
-    <div class="dhero">
-      <div class="d-ico">${g.emoji||'💰'}</div>
-      <div><div class="d-name">${g.name}</div>${g.note?`<div class="d-note">${g.note}</div>`:''}</div>
-    </div>
-    <div class="scard">
-      <div>
-        <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Saved</div>
-        <div class="sv">${cad(g.saved)}</div>
-        <div class="sof">of ${cad(g.target)}</div>
-      </div>
-      <div class="brw">${ring(pct,80,7,col)}<div class="brw-p" style="color:${col}">${pct}%</div></div>
-    </div>`;
-  if (rem>0) h+=`<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:20px;margin:0 18px 12px">
-    <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Still needed</div>
-    <div style="font-family:Syne,sans-serif;font-size:28px;font-weight:800">${cad(rem)}</div>
-  </div>`;
-  if (pct>=100) h+=`<div style="text-align:center;font-size:24px;padding:4px 0 14px">🎉 Goal reached!</div>`;
-  h+=`<button class="abtn" onclick="openDeposit()">+ Add Deposit</button>
-      <button class="gbtn" onclick="askDelete('${g.id}')">Delete goal</button>`;
-  if (hist.length>0) {
-    h+=`<div class="hist"><div class="hl">History</div>`;
-    h+=hist.map(e=>`<div class="hr">
-      <div><div class="hn">${e.note||'Deposit'}</div><div class="hd">${new Date(e.date).toLocaleDateString('fr-CA')}</div></div>
-      <div class="ha">+${cad(e.amount)}</div>
-    </div>`).join('');
-    h+=`</div>`;
-  }
-  document.getElementById('det-body').innerHTML = h;
-}
-function openDeposit() {
-  const g=goals.find(x=>x.id===activeId);
-  document.getElementById('dep-title').textContent = `${g.emoji} ${g.name}`;
-  document.getElementById('d-amt').value=''; document.getElementById('d-note').value='';
-  goScreen('deposit');
-}
-async function saveDeposit() {
-  const amt=Number(document.getElementById('d-amt').value);
-  if (!amt||amt<=0) { doShake(document.getElementById('d-amt')); return; }
-  const note=document.getElementById('d-note').value.trim();
-  const g=goals.find(x=>x.id===activeId);
-  const newHist=[{amount:amt,note,date:Date.now()},...(Array.isArray(g.history)?g.history:[])];
-  const newSaved=(g.saved||0)+amt;
-  const btn=document.querySelector('#deposit .sbtn');
-  btn.textContent='...'; btn.disabled=true;
-  const {error}=await sb.from('goals').update({saved:newSaved,history:newHist}).eq('id',activeId);
-  btn.textContent='Save deposit'; btn.disabled=false;
-  if (!error) {
-    goals=goals.map(x=>x.id===activeId?{...x,saved:newSaved,history:newHist}:x);
-    goScreen('detail');
-  }
-}
-async function askDelete(id) {
-  const r=await showModal('Delete goal','This will permanently delete this goal and all its deposit history.',[
-    {label:'Cancel',cls:'cancel'},{label:'Delete',cls:'confirm'}
-  ]);
-  if (r===1) {
-    await sb.from('goals').delete().eq('id',id);
-    goals=goals.filter(g=>g.id!==id);
-    goScreen('home');
-  }
-}
-
-// ══════════════════════════════════════════
-//  SETTINGS
-// ══════════════════════════════════════════
-function renderSettings() {
-  const tier = profile.tier||'free';
-  const isPaid = tier!=='free';
-
-  // Theme grid
-  document.getElementById('theme-grid').innerHTML = THEMES.map(t=>{
-    const locked = !isPaid && !FREE_THEMES.includes(t.id);
-    return `<button class="theme-btn${profile.theme===t.id?' on':''}" onclick="${locked?`showUpgradePrompt('theme')`:`changeTheme('${t.id}')`}">
-      <div class="tp" style="background:linear-gradient(135deg,${t.bg} 0%,${t.s1} 60%,${t.s2} 100%)"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="tn">${t.name}</div>${locked?'<div style="font-size:11px;color:var(--muted)">Plus+</div>':''}
-      </div>
-    </button>`;
-  }).join('');
-
-  // Accent grid
-  document.getElementById('accent-grid').innerHTML = ACCENTS.map(a=>{
-    const locked = !isPaid && !FREE_ACCENTS.includes(a.id);
-    return `<div class="ad${profile.accent===a.id?' on':''}" style="background:${a.color};opacity:${locked?.45:1}"
-      onclick="${locked?`showUpgradePrompt('accent')`:`changeAccent('${a.id}')`}" title="${a.label}">
-      ${profile.accent===a.id?'✓':''}
-    </div>`;
-  }).join('');
-
-  // Tier cards
-  document.getElementById('tier-cards').innerHTML = Object.entries(TIERS).map(([id,t])=>`
-    <div class="tcard${tier===id?' cur':''}">
-      <div class="tcrow">
-        <div><div class="tcname">${t.name}</div><div class="tcprice">${t.price}</div></div>
-        ${tier===id?'<div class="curtag">Current</div>':''}
-      </div>
-      <ul class="tcfeat">${t.features.map(f=>`<li>${f}</li>`).join('')}</ul>
-      ${tier!==id&&id!=='free'?`<button class="upgbtn" onclick="requestUpgrade('${id}')">Upgrade to ${t.name}</button>`:''}
-    </div>`).join('');
-}
-
-async function changeTheme(t) {
-  await savePref('theme',t); applyTheme(t,profile.accent); renderSettings();
-}
-async function changeAccent(a) {
-  await savePref('accent',a); applyTheme(profile.theme,a); renderSettings();
-}
-function showUpgradePrompt(feature) {
-  showModal('Unlock this feature',
-    `Themes and accent colors beyond the basics are available on <strong>Plus</strong> and above. Upgrade to unlock all customization options.`,
-    [{label:'Maybe later',cls:'cancel'},{label:'See plans',cls:'confirm'}]
-  ).then(r=>{ if(r===1) document.getElementById('tier-cards').scrollIntoView({behavior:'smooth'}); });
-}
-function requestUpgrade(tier) {
-  showModal(`Upgrade to ${TIERS[tier].name}`,
-    `To upgrade, set your <code>tier</code> field to <strong>${tier}</strong> in your Supabase profiles table. Payment integration via Stripe can be added later.`,
-    [{label:'Got it',cls:'confirm'}]
-  );
-}
-
-// ══════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════
-async function init() {
-  const { data:{ session } } = await sb.auth.getSession();
-  const ld = document.getElementById('loading');
-  if (session) {
-    user = session.user;
-    await Promise.all([loadProfile(), loadGoals()]);
-    ld.style.opacity='0'; setTimeout(()=>ld.style.display='none',300);
-    goScreen('home');
-  } else {
-    ld.style.opacity='0'; setTimeout(()=>ld.style.display='none',300);
-    goScreen('auth');
-  }
-  sb.auth.onAuthStateChange(async (event,session)=>{
-    if (event==='SIGNED_IN'&&session) {
-      user=session.user;
-      await Promise.all([loadProfile(),loadGoals()]);
-      goScreen('home');
-    } else if (event==='SIGNED_OUT') {
-      goScreen('auth');
-    }
-  });
-}
-init();
+// Scroll reveal
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 </body>
 </html>
