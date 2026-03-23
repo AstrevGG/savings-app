@@ -388,10 +388,13 @@ function applyTheme(t,a) { document.body.className = `theme-${t} accent-${a}`; }
 //  SCREENS
 // ══════════════════════════════════════════
 function goScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(name)?.classList.add('active');
-  window.scrollTo(0,0);
-  if(name==='home')     renderHome();
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(name);
+  if(el) { el.style.display = name==='auth' ? 'flex' : 'block'; el.classList.add('active'); }
+  window.scrollTo(0,0);  if(name==='home')     renderHome();
   if(name==='detail')   renderDetail();
   if(name==='settings') renderSettings();
 }
