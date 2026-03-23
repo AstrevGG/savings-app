@@ -37,7 +37,8 @@ body {
 /* ── SCREENS ── */
 .screen { display:none; min-height:100vh; }
 .screen.active { display:block; animation:fadeUp .25s ease; }
-#auth.active { display:flex; position:fixed; inset:0; z-index:500; background:var(--bg); overflow-y:auto; }
+#auth { display:none; position:fixed; inset:0; z-index:500; background:var(--bg); overflow-y:auto; }
+#auth.active { display:flex; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 @keyframes shake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
 @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.4} }
@@ -389,6 +390,7 @@ function applyTheme(t,a) { document.body.className = `theme-${t} accent-${a}`; }
 function goScreen(name) {
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(name)?.classList.add('active');
+  window.scrollTo(0,0);
   if(name==='home')     renderHome();
   if(name==='detail')   renderDetail();
   if(name==='settings') renderSettings();
