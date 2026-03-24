@@ -736,9 +736,23 @@ async function init() {
     if (event==='SIGNED_IN'&&session) {
       user=session.user;
       await Promise.all([loadProfile(),loadGoals()]);
-      goScreen('home');
+      document.querySelectorAll('.screen').forEach(s=>{
+        s.classList.remove('active');
+        s.style.display='none';
+      });
+      const el=document.getElementById('home');
+      el.style.display='block';
+      el.classList.add('active');
+      window.scrollTo(0,0);
+      renderHome();
     } else if (event==='SIGNED_OUT') {
-      goScreen('auth');
+      document.querySelectorAll('.screen').forEach(s=>{
+        s.classList.remove('active');
+        s.style.display='none';
+      });
+      const el=document.getElementById('auth');
+      el.style.display='flex';
+      el.classList.add('active');
     }
   });
 }
