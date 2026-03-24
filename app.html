@@ -388,13 +388,10 @@ function applyTheme(t,a) { document.body.className = `theme-${t} accent-${a}`; }
 //  SCREENS
 // ══════════════════════════════════════════
 function goScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>{
-    s.classList.remove('active');
-    s.style.display = 'none';
-  });
-  const el = document.getElementById(name);
-  if(el) { el.style.display = name==='auth' ? 'flex' : 'block'; el.classList.add('active'); }
-  window.scrollTo(0,0);  if(name==='home')     renderHome();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name)?.classList.add('active');
+  window.scrollTo(0,0);
+  if(name==='home')     renderHome();
   if(name==='detail')   renderDetail();
   if(name==='settings') renderSettings();
 }
@@ -698,17 +695,32 @@ function showUpgradePrompt(feature) {
     [{label:'Maybe later',cls:'cancel'},{label:'See plans',cls:'confirm'}]
   ).then(r=>{ if(r===1) document.getElementById('tier-cards').scrollIntoView({behavior:'smooth'}); });
 }
-function requestUpgrade(tier) {
-  showModal(`Upgrade to ${TIERS[tier].name}`,
-    `To upgrade, set your <code>tier</code> field to <strong>${tier}</strong> in your Supabase profiles table. Payment integration via Stripe can be added later.`,
-    [{label:'Got it',cls:'confirm'}]
-  );
+async function requestUpgrade(tier) {
+  const btn = document.querySelector(`[onclick="requestUpgrade('${tier}')"]`);
+  if(btn){btn.textContent='...';btn.disabled=true;}
+  try {
+    const res = await fetch('/api/create-checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tier,userId:user.id,email:user.email})
+    });
+    const data = await res.json();
+    if(data.url){ window.location.href=data.url; }
+    else { showModal('Error',data.error||'Something went wrong.',[{label:'OK',cls:'confirm'}]); }
+  } catch(err) {
+    showModal('Error','Could not connect to payment server.',[{label:'OK',cls:'confirm'}]);
+  }
+  if(btn){btn.textContent=`Upgrade to ${TIERS[tier].name}`;btn.disabled=false;}
 }
 
 // ══════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════
 async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const upgraded = params.get("upgraded");
+  if(upgraded) history.replaceState({},document.title,window.location.pathname);
+
   const { data:{ session } } = await sb.auth.getSession();
   const ld = document.getElementById('loading');
   if (session) {
